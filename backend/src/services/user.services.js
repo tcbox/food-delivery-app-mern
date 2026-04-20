@@ -1,10 +1,12 @@
-import genToken from "src/utils/genToken.js";
+import genToken from "../utils/genToken.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
-import { cookieOption } from "src/utils/setAuthCookie.js";
+import Session from "../models/session.model.js";
+import { _30day } from "../utils/date.js";
+
 // Service should NOT take req, res, next. It takes data directly and returns data.
 export const createUser = async (validateBody) => {
-  const { username, email, password, mobile, role, authProvider } =
+  const { username, email, password, mobile, role, authProvider, userAgent } =
     validateBody;
 
   const user = await User.findOne({ email });
@@ -26,9 +28,21 @@ export const createUser = async (validateBody) => {
     mobile,
     role,
     authProvider,
+    userAgent,
   });
 
-  const token = await genToken(newUser._id);
+  // Create Session record in DB
+  const session = await Session.create({
+    userId: newUser._id,
+    userAgent,
+    expiresAt: _30day,
+  });
+
+  // Pass both userId and sessionId to token
+  const token = await genToken({
+    userId: newUser._id,
+    sessionId: session._id,
+  });
 
   return { newUser, token };
 };

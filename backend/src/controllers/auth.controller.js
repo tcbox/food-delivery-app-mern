@@ -1,9 +1,9 @@
-import { statusCode } from "src/config/constants/statusCode.js";
-import User from "../models/user.model.js";
+import { statusCode } from "../config/constants/statusCode.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import z, { email } from "zod";
-import bcrypt from "bcrypt";
+import { secureCookie } from "../utils/setAuthCookie.js";
 import { createUser } from "../services/user.services.js";
+import { _7day } from "../utils/date.js";
 
 export const registerSchema = z
   .object({
@@ -26,7 +26,7 @@ export const registerSchema = z
       )
       .trim(),
     role: z.enum(["user", "admin", "deliveryBoy"]).default("user"),
-    mobile: z.string().optional().trim(),
+    mobile: z.string().trim().min(10).optional(),
     userAgent: z.string().optional(),
     authProvider: z
       .enum(["credentials", "google", "github", "facebook"])
@@ -71,18 +71,18 @@ const register = asyncHandler(async (req, res, next) => {
   const { newUser, token } = await createUser(validateBody);
 
   res.cookie("token", token, {
-    sameSite: "strict",
-    httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    ...secureCookie,
+    expires: _7day,
   });
 
   return res.status(statusCode.CREATED).json({
     success: true,
     message: "user registered successfully",
     data: {
+      id: newUser.id,
       name: newUser.username,
       email: newUser.email,
+      mobile: newUser.mobile,
     },
   });
 });

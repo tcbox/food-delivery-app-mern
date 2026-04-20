@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema(
     mobile: { type: String },
     role: { type: String, enum: USER_ROLES, default: "user", required: true },
     authProvider: { type: String, enum: AUTH_PROVIDER, default: "credentials" },
+    userAgent: { type: String },
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
   },

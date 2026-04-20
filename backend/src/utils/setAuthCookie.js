@@ -1,10 +1,9 @@
-import { getEnv } from "src/config/env/getEnv";
+import { getEnv } from "../config/env/getEnv.js";
 
 const secure = getEnv.NODE_ENV !== "development";
 
-export const cookieOption = {
+export const secureCookie = {
   sameSite: "strict",
   httpOnly: true,
   secure,
 };
-

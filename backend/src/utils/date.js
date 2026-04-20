@@ -115,6 +115,10 @@ export const _30secs = time.addSeconds(30);
 export const _45mins = time.addMinutes(45);
 export const _12hours = time.addHours(12);
 export const _1day = time.addDays(1);
+export const _7day = time.addDays(7).value;
+export const _30day = time.addDays(30).value;
+console.log(_7day);
+
 export const _1year = time.addYears(1);
 
 const ind = _12hours.indianTime;

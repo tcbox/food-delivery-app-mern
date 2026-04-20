@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "type": "module",
+  "imports": {
+    "#src": "./src/*"
+  },
   "scripts": {
     "dev": "nodemon  ./src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
