@@ -1,30 +1,39 @@
+import { hashPassword, comparePassword } from "../utils/AuthHelper.js";
 import genToken from "../utils/genToken.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import Session from "../models/session.model.js";
 import { _30day } from "../utils/date.js";
+import AppError from "../utils/AppError.js";
+import { statusCode } from "../config/constants/statusCode.js";
 
 // Service should NOT take req, res, next. It takes data directly and returns data.
-export const createUser = async (validateBody) => {
+
+/*
+ * signup
+ * */
+export const createUserService = async (validateBody) => {
   const { username, email, password, mobile, role, authProvider, userAgent } =
     validateBody;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).lean();
   if (user) {
-    throw new Error("User Already Exists");
+    throw new AppError(statusCode.BAD_REQUEST, "user already exist");
   }
 
-  let hashPassword = "";
+  const hashedPassword = password ? await hashPassword(password) : "";
 
-  if (password) {
-    const salt = await bcrypt.genSalt(10);
-    hashPassword = await bcrypt.hash(password, salt);
+  if (!hashedPassword) {
+    throw new AppError(
+      statusCode.BAD_REQUEST,
+      "Password is Missing, Please enter password ",
+    );
   }
 
   const newUser = await User.create({
     username,
     email,
-    password: hashPassword,
+    password: hashedPassword,
     mobile,
     role,
     authProvider,
@@ -45,4 +54,41 @@ export const createUser = async (validateBody) => {
   });
 
   return { newUser, token };
+};
+
+/*
+ * Login
+ * */
+export const loginUserService = async (validateBody) => {
+  const { email, mobile, password, userAgent } = validateBody;
+
+  const user = await User.findOne({
+    $or: [{ email: email || "" }, { mobile: mobile || "" }],
+  }).lean();
+
+  if (!user) {
+    throw new AppError(statusCode.NOT_FOUND, "User not found!");
+  }
+
+  const isMatch = await comparePassword(password, user.password);
+  if (!isMatch) {
+    throw new AppError(statusCode.UNAUTHORIZED, "User not found");
+  }
+
+  // Session unte update chestundi, lekapote kothadi create chestundi (Upsert)
+  const session = await Session.findOneAndUpdate(
+    { userId: user._id, userAgent }, // Denithoni vethukutundi
+    { expiresAt: _30day }, // Em update cheyali
+    { upsert: true, new: true }, // Upsert logic
+  );
+
+  const token = await genToken({
+    userId: user._id,
+    sessionId: session._id,
+  });
+
+  return {
+    user,
+    token,
+  };
 };

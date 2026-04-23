@@ -21,7 +21,7 @@ const sessionSchema = new mongoose.Schema(
 );
 
 // TTL Index: Automatically delete sessions when they expire
-sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 },);
+sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const Session = mongoose.model("Session", sessionSchema);
 

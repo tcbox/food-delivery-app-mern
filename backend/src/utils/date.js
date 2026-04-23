@@ -1,5 +1,4 @@
 // OPTIMIZED - 1.5-2KB version
-const created = new Date();
 
 class Duration {
   constructor(baseDate) {
@@ -9,8 +8,7 @@ class Duration {
 
   // Single helper method for all additions
   _add(type, count) {
-    const d = new Duration(this.baseDate);
-    d.value = new Date(this.value);
+    const d = new Duration(this.value);
     const methods = {
       s: "Seconds",
       m: "Minutes",
@@ -19,6 +17,9 @@ class Duration {
       M: "Month",
       y: "FullYear",
     };
+    if (!methods[type]) {
+      throw new Error(`Invalid duration type: ${type}`);
+    }
     d.value[`set${methods[type]}`](d.value[`get${methods[type]}`]() + count);
     return d;
   }
@@ -110,16 +111,17 @@ class Duration {
   }
 }
 
+const created = new Date();
+
 export const time = new Duration(created);
-export const _30secs = time.addSeconds(30);
-export const _45mins = time.addMinutes(45);
-export const _12hours = time.addHours(12);
-export const _1day = time.addDays(1);
+export const _30secs = time.addSeconds(30).value;
+export const _45mins = time.addMinutes(45).value;
+export const _12hours = time.addHours(12).value;
+export const _1day = time.addDays(1).value;
 export const _7day = time.addDays(7).value;
+("  ");
 export const _30day = time.addDays(30).value;
-console.log(_7day);
 
 export const _1year = time.addYears(1);
 
 const ind = _12hours.indianTime;
-console.log(ind);
