@@ -7,15 +7,15 @@ const verificationCode = new mongoose.Schema({
     required: true,
     index: true,
   },
+  code: { type: String, required: true },
   type: { type: String, required: true },
-  createdAt: { type: String, required: true, default: Date.now },
-  expriesAt: { type: String, required: true },
+  createdAt: { type: Date, required: true, default: Date.now },
+  expiresAt: { type: Date, required: true },
 });
 
 const VerificationCodeModel = mongoose.model(
-  "VarificationCode",
+  "VerificationCode",
   verificationCode,
-  "verification_schema",
 );
 
 export default VerificationCodeModel;

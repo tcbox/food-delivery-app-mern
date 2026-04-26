@@ -5,6 +5,8 @@ import { secureCookie } from "../utils/AuthHelper.js";
 import {
   createUserService,
   loginUserService,
+  resetPassword,
+  sendOtpService,
 } from "../services/user.services.js";
 import { _7day } from "../utils/date.js";
 import AppError from "../utils/AppError.js";
@@ -41,7 +43,7 @@ const authSchema = z.object({
 });
 
 /*
- * Hanlder schema
+ * Handler schema
  * */
 export const registerSchema = authSchema.superRefine((data, ctx) => {
   if (data.authProvider === "credentials") {
@@ -135,7 +137,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
   });
 
   if (!validateBody.success) {
-    throw new AppError(statusCode.BAD_REQUEST, "Invaild input data");
+    throw new AppError(statusCode.BAD_REQUEST, "Invalid input data");
   }
 
   const { user, token } = await loginUserService(validateBody.data);
@@ -151,28 +153,77 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
   return res.status(statusCode.OK).json({
     success: true,
-    message: "Login successfull",
+    message: "Login successful",
     data: { id: user._id, name: user.username, email: user.email },
   });
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
+  const token = req.cookies?.token;
+
+  if (!token) {
+    return res.status(statusCode.BAD_REQUEST).json({
+      success: false,
+      message: "Already logged out",
+    });
+  }
+
   res.clearCookie("token");
   return res.status(statusCode.OK).json({
-    message: "logout successfull",
+    success: true,
+    message: "logout successful",
   });
 });
 
-export const sendOtp = asyncHandler(async (req, res, next) => {
-  const { email } = req.body;
-  const user = await User.findOne({
-    email,
-  });
-  if (!user) {
-    throw new AppError(statusCode.NOT_FOUND, "User not found");
+const sendOtp = asyncHandler(async (req, res, next) => {
+  const { email, mobile } = req.body;
+
+  if (!email && !mobile) {
+    throw new AppError(
+      statusCode.BAD_REQUEST,
+      "Email or Mobile is required to send OTP",
+    );
   }
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  
+
+  const response = await sendOtpService(email, mobile);
+
+  return res.status(statusCode.OK).json({
+    success: true,
+    message: response.message,
+  });
 });
 
-export { registerUser, loginUser, logoutUser };
+const verifyOtp = asyncHandler(async (req, res, next) => {
+  const { email, mobile, otp } = req.body;
+
+  if (!email && !mobile)
+    throw new AppError(statusCode.SERVICE_UNAVAILABLE, "session timeout ");
+
+  const response = await verifyOtpService(email, mobile, otp);
+
+  return res.status(statusCode.OK).json({
+    success: true,
+    message: response.message,
+  });
+});
+
+const verifyPassword = asyncHandler(async (req, res, next) => {
+  const { email, mobile, newPassword } = req.body;
+  if (!email && !mobile)
+    throw new AppError(statusCode.NOT_FOUND, "user not found");
+
+  const response = await resetPassword(email, mobile, newPassword);
+
+  return res
+    .status(statusCode.OK)
+    .json({ success: true, message: response.message });
+});
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  sendOtp,
+  verifyOtp,
+  verifyPassword,
+};

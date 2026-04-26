@@ -116,7 +116,7 @@ const created = new Date();
 export const time = new Duration(created);
 export const _30secs = time.addSeconds(30).value;
 export const _45mins = time.addMinutes(45).value;
-export const _12hours = time.addHours(12).value;
+export const _12hours = time.addHours(12);
 export const _1day = time.addDays(1).value;
 export const _7day = time.addDays(7).value;
 ("  ");

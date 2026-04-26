@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
-import { getEnv } from "src/config/env/getEnv";
-import { secure } from "./AuthHelper";
+import { getEnv } from "../config/env/getEnv.js";
+import { secure } from "./AuthHelper.js";
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const SendOtpMailer = async (to, otp) => {
+export const SendOtpMailer = async (to, otp) => {
   try {
     await transporter.sendMail({
       from: getEnv.EMAIL_SMTP,
@@ -20,5 +20,7 @@ const SendOtpMailer = async (to, otp) => {
       subject: "Reset Your Password",
       html: `<p>your OTP for reset password <b>${otp}</b>. it expires in 5 minutes </p>`,
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log("Email send error:", error);
+  }
 };

@@ -7,11 +7,13 @@ import route from "./routes/v1/route.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "20kb" }));
+app.use(express.urlencoded({ extended: true, limit: "20kb" }));
+
 const PORT = getEnv.PORT || 3001;
+
 app.use(cookieParser());
 app.use(cors());
-connectDb();
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -25,5 +27,6 @@ app.use("/api/v1", route);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
+  connectDb(); 
   console.log(`server is running at http://localhost:${PORT}`);
 });
